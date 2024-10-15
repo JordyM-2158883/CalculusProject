@@ -14,22 +14,24 @@ w_ymax = w_ymin + (w_xmax - w_xmin) / vp_width * vp_height
 CEILING = w_ymax - 0.5
 FLOOR = w_ymin + 0.5
 
-k = 30  # N/m
+k = 100  # N/m
 m = 1  # kg
 g = 9.81  # m/(s*s)
-
+kd = 0.5  # dempingsfactor
 AMOUNT = 10
+SPRING_REST_LENGTH = 0.5
 
 begin_posities = []
 
 
 def init_positions(n):
     global begin_posities
-    begin_posities = np.linspace(-2, 3, n)
-
     return_list = []
-    for i in begin_posities:
-        return_list.append([i, i])  # [0] = y, [1] = y_prev
+    prev = CEILING
+    for i in range(0, n):
+        return_list.append([prev - SPRING_REST_LENGTH, prev - SPRING_REST_LENGTH])
+        begin_posities.append(prev - SPRING_REST_LENGTH)
+        prev -= SPRING_REST_LENGTH
     return return_list
 
 
@@ -55,7 +57,9 @@ def do_simulation():
 
     for i, y in enumerate(pos_y2):
         tmp = y[0]
-        a = g - (k * (y[0]-begin_posities[i])) / m
+        v = (y[0] - y[1]) / (2 * dt)
+        print(v)
+        a = g - (k * (y[0] - begin_posities[i]) + kd * v) / m
         y[0] = 2 * y[0] - y[1] + a * dt * dt
         y[1] = tmp
 
