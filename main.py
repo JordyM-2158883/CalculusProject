@@ -20,11 +20,16 @@ g = 9.81  # m/(s*s)
 
 AMOUNT = 10
 
+begin_posities = []
+
 
 def init_positions(n):
+    global begin_posities
+    begin_posities = np.linspace(-2, 3, n)
+
     return_list = []
-    for i in np.linspace(-2, 4, n):
-        return_list.append((i, i))  # [0] = y, [1] = y_prev
+    for i in begin_posities:
+        return_list.append([i, i])  # [0] = y, [1] = y_prev
     return return_list
 
 
@@ -46,16 +51,13 @@ def draw_scene():
 
 def do_simulation():
     global pos_y2
-    tmp_list = []
     dt = DELTA_TSIM
 
-    while(len(pos_y2)):
-        pos_y = pos_y2.pop(0)
-        a = -g - (k * pos_y[0]) / m
-        y_prev = pos_y[0]
-        y = 2 * pos_y[0] - pos_y[1] + a * dt * dt
-        tmp_list.append((y, y_prev))
-    pos_y2 = tmp_list
+    for i, y in enumerate(pos_y2):
+        tmp = y[0]
+        a = g - (k * (y[0]-begin_posities[i])) / m
+        y[0] = 2 * y[0] - y[1] + a * dt * dt
+        y[1] = tmp
 
 
 window = Tk()
