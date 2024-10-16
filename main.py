@@ -45,21 +45,30 @@ def draw_scene():
     RED = rgb_col(255, 0, 0)
     GREEN = rgb_col(0, 255, 0)
     draw_line(canvas, w_xmin / 2, CEILING, w_xmax / 2, CEILING, GREEN)  # CEILING
-    for i in pos_y2:
+    for i in pos_list:
         y = i[0]
         draw_dot(canvas, 0, y, RED)
         draw_line(canvas, 0, CEILING, 0, y, YELLOW)
 
 
+def bereken_eigen_krachten(dt):
+    return_list = []
+    for i, y in enumerate(pos_list):
+        v = (y[0] - y[1]) / (2 * dt)
+        F = m * g - kd * v - k * (y[0] - begin_posities[i])
+        return_list.append(F)
+    return return_list
+
+
 def do_simulation():
-    global pos_y2
+    global pos_list
     dt = DELTA_TSIM
 
-    for i, y in enumerate(pos_y2):
+    krachten = bereken_eigen_krachten(dt)
+
+    for i, y in enumerate(pos_list):
         tmp = y[0]
-        v = (y[0] - y[1]) / (2 * dt)
-        print(v)
-        a = g - (k * (y[0] - begin_posities[i]) + kd * v) / m
+        a = krachten[i] / m
         y[0] = 2 * y[0] - y[1] + a * dt * dt
         y[1] = tmp
 
@@ -75,7 +84,7 @@ init_time = time.perf_counter()
 prev_draw_time = 0
 prev_sim_time = 0
 
-pos_y2 = init_positions(10)
+pos_list = init_positions(10)
 
 while not simulation_done:
     # SIMULATION
