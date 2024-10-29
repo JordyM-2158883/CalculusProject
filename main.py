@@ -16,13 +16,13 @@ FLOOR = w_ymin + 0.5
 pos_x = 0.0
 pos_y = []
 
-AMOUNT = 4
+AMOUNT = 10
 
 # constanten
 m = 1
 g = 9.81
-k = 10
-l0 = 1
+k = 100
+l0 = 0.5
 kd = 0.5
 
 
@@ -36,14 +36,14 @@ def bereken_kracht(i, dt):
     Fd = -(pos_y[i][0] - pos_y[i][1]) / (2 * dt) * kd
 
     if i == 0:  # eerste
-        Fk1 = k * (CEILING - pos_y[i][0])  # omhoog
-        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0])  # omlaag
+        Fk1 = k * (CEILING - pos_y[i][0] - l0)  # omhoog
+        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0] + l0)  # omlaag
     elif i == AMOUNT - 1:  # laatste
-        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0])
+        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0] - l0)
         fk2 = 0
     else:
-        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0])
-        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0])
+        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0] - l0)
+        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0] + l0)
 
     return Fzw + Fk1 + fk2 + Fd
 
@@ -62,7 +62,11 @@ def draw_scene():
     YELLOW = rgb_col(255, 255, 0)
     draw_line(canvas, w_xmin / 2, CEILING, w_xmax / 2, CEILING, GREEN)
     for i in range(0, AMOUNT):
-        draw_dot(canvas, pos_x, pos_y[i][0], YELLOW)
+        if i == 0:
+            draw_line(canvas, pos_x, CEILING, pos_x, pos_y[i][0], YELLOW)
+        else:
+            draw_line(canvas, pos_x, pos_y[i - 1][0], pos_x, pos_y[i][0], YELLOW)
+        draw_dot(canvas, pos_x, pos_y[i][0], RED)
 
 
 def init_scene():
