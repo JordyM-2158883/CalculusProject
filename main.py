@@ -1,38 +1,29 @@
-from graphics_template import *
 from tkinter import Tk, Canvas
-import time
-import numpy as np
-
-simulation_done = False
-DELTA_TDRAW = 0.02
-DELTA_TSIM = 0.0005
+from graphics_template import *
+import math, time
 
 vp_width, vp_height = 1024, 768
-w_xmin, w_ymin, w_xmax = -5, -3, 5
+w_xmin, w_ymin, w_xmax = -10, 0, 10
 w_ymax = w_ymin + (w_xmax - w_xmin) / vp_width * vp_height
+
+simulation_done = False
+DELTA_TSIM = 0.0005
+DELTA_TDRAW = 0.02  # 50 fps
 
 CEILING = w_ymax - 0.5
 FLOOR = w_ymin + 0.5
 
-k = 100  # N/m
-m = 1  # kg
-g = 9.81  # m/(s*s)
-kd = 0.5  # dempingsfactor
-AMOUNT = 10
-SPRING_REST_LENGTH = 0.5
+pos_x = 0.0
+pos_y = []
 
-begin_posities = []
+AMOUNT = 2
 
-
-def init_positions(n):
-    global begin_posities
-    return_list = []
-    prev = CEILING
-    for i in range(0, n):
-        return_list.append([prev - SPRING_REST_LENGTH, prev - SPRING_REST_LENGTH])
-        begin_posities.append(prev - SPRING_REST_LENGTH)
-        prev -= SPRING_REST_LENGTH
-    return return_list
+# constanten
+m = 10
+g = 9.81
+k = 100
+l0 = 1
+kd = 10
 
 
 def left_click(event):
@@ -40,37 +31,47 @@ def left_click(event):
     simulation_done = True
 
 
+def bereken_kracht(i, dt):
+    Fzw = -m * g
+    Fd = -(pos_y[i][0] - pos_y[i][1]) / (2 * dt) * kd
+
+    if i == 0:  # eerste
+        Fk1 = k * (CEILING - pos_y[i][0])  # omhoog
+        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0])  # omlaag
+    elif i == AMOUNT - 1:  # laatste
+        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0])
+        fk2 = 0
+    else:
+        Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0])
+        fk2 = 0 # TODO
+
+    return Fzw + Fk1 + fk2 + Fd
+
+
+def do_simulation(dt):
+    tmp1 = pos_y[0][0]
+    pos_y[0][0] = 2 * pos_y[0][0] - pos_y[0][1] + (bereken_kracht(0, dt) / m) * dt * dt
+    pos_y[0][1] = tmp1
+
+    tmp2 = pos_y[1][0]
+    pos_y[1][0] = 2 * pos_y[1][0] - pos_y[1][1] + (bereken_kracht(1, dt) / m) * dt * dt
+    pos_y[1][1] = tmp2
+
+
 def draw_scene():
-    YELLOW = rgb_col(255, 255, 0)
+    # draw_grid (canvas)
     RED = rgb_col(255, 0, 0)
     GREEN = rgb_col(0, 255, 0)
-    draw_line(canvas, w_xmin / 2, CEILING, w_xmax / 2, CEILING, GREEN)  # CEILING
-    for i in pos_list:
-        y = i[0]
-        draw_dot(canvas, 0, y, RED)
-        draw_line(canvas, 0, CEILING, 0, y, YELLOW)
+    YELLOW = rgb_col(255, 255, 0)
+    draw_line(canvas, w_xmin / 2, CEILING, w_xmax / 2, CEILING, GREEN)
+    for i in range(0, AMOUNT):
+        draw_dot(canvas, pos_x, pos_y[i][0], YELLOW)
 
 
-def bereken_eigen_krachten(dt):
-    return_list = []
-    for i, y in enumerate(pos_list):
-        v = (y[0] - y[1]) / (2 * dt)
-        F = m * g - kd * v - k * (y[0] - begin_posities[i])
-        return_list.append(F)
-    return return_list
-
-
-def do_simulation():
-    global pos_list
-    dt = DELTA_TSIM
-
-    krachten = bereken_eigen_krachten(dt)
-
-    for i, y in enumerate(pos_list):
-        tmp = y[0]
-        a = krachten[i] / m
-        y[0] = 2 * y[0] - y[1] + a * dt * dt
-        y[1] = tmp
+def init_scene():
+    for i in range(1, AMOUNT + 1):
+        pos_y.append([CEILING - (l0 * i), CEILING - (l0 * i)])
+    draw_scene()
 
 
 window = Tk()
@@ -84,18 +85,17 @@ init_time = time.perf_counter()
 prev_draw_time = 0
 prev_sim_time = 0
 
-pos_list = init_positions(10)
+init_scene()
 
 while not simulation_done:
-    # SIMULATION
+    # simulating
     sim_dt = time.perf_counter() - init_time - prev_sim_time
     if sim_dt > DELTA_TSIM:
-        do_simulation()
+        do_simulation(DELTA_TSIM)
         prev_sim_time += DELTA_TSIM
-
-    # DRAWING
+    # drawing
     draw_dt = time.perf_counter() - init_time - prev_draw_time
-    if draw_dt > DELTA_TDRAW:
+    if draw_dt > DELTA_TDRAW:  # 50 fps
         canvas.delete("all")
         draw_scene()
         canvas.update()
