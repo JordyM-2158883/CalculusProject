@@ -31,6 +31,8 @@ def left_click(event):
     simulation_done = True
 
 
+
+
 def bereken_kracht(i, dt):
     Fzw = -m * g
     Fd = -(pos_y[i][0] - pos_y[i][1]) / (2 * dt) * kd
@@ -101,3 +103,8 @@ while not simulation_done:
         draw_scene()
         canvas.update()
         prev_draw_time += DELTA_TDRAW
+    
+while True:
+    draw_dt = time.perf_counter() - init_time - prev_draw_time
+    if draw_dt > DELTA_TDRAW:  # 50 fps
+        canvas.update()
