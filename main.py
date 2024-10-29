@@ -16,14 +16,14 @@ FLOOR = w_ymin + 0.5
 pos_x = 0.0
 pos_y = []
 
-AMOUNT = 2
+AMOUNT = 4
 
 # constanten
-m = 10
+m = 1
 g = 9.81
-k = 100
+k = 10
 l0 = 1
-kd = 10
+kd = 0.5
 
 
 def left_click(event):
@@ -43,19 +43,16 @@ def bereken_kracht(i, dt):
         fk2 = 0
     else:
         Fk1 = k * (pos_y[i - 1][0] - pos_y[i][0])
-        fk2 = 0 # TODO
+        fk2 = k * (pos_y[i + 1][0] - pos_y[i][0])
 
     return Fzw + Fk1 + fk2 + Fd
 
 
 def do_simulation(dt):
-    tmp1 = pos_y[0][0]
-    pos_y[0][0] = 2 * pos_y[0][0] - pos_y[0][1] + (bereken_kracht(0, dt) / m) * dt * dt
-    pos_y[0][1] = tmp1
-
-    tmp2 = pos_y[1][0]
-    pos_y[1][0] = 2 * pos_y[1][0] - pos_y[1][1] + (bereken_kracht(1, dt) / m) * dt * dt
-    pos_y[1][1] = tmp2
+    for i in range(0, AMOUNT):
+        tmp = pos_y[i][0]
+        pos_y[i][0] = 2 * pos_y[i][0] - pos_y[i][1] + (bereken_kracht(i, dt) / m) * dt * dt
+        pos_y[i][1] = tmp
 
 
 def draw_scene():
