@@ -1,6 +1,6 @@
-from tkinter import Tk, Canvas
+from tkinter import Tk, Canvas, mainloop
 from graphics_template import *
-import math, time
+import time
 
 vp_width, vp_height = 1024, 768
 w_xmin, w_ymin, w_xmax = -10, 0, 10
@@ -90,21 +90,22 @@ prev_sim_time = 0
 
 init_scene()
 
-while not simulation_done:
-    # simulating
-    sim_dt = time.perf_counter() - init_time - prev_sim_time
-    if sim_dt > DELTA_TSIM:
-        do_simulation(DELTA_TSIM)
-        prev_sim_time += DELTA_TSIM
-    # drawing
-    draw_dt = time.perf_counter() - init_time - prev_draw_time
-    if draw_dt > DELTA_TDRAW:  # 50 fps
-        canvas.delete("all")
-        draw_scene()
-        canvas.update()
-        prev_draw_time += DELTA_TDRAW
+def main():
+    global prev_draw_time, prev_sim_time
+    while not simulation_done:
+        # simulating
+        sim_dt = time.perf_counter() - init_time - prev_sim_time
+        if sim_dt > DELTA_TSIM:
+            do_simulation(DELTA_TSIM)
+            prev_sim_time += DELTA_TSIM
+        # drawing
+        draw_dt = time.perf_counter() - init_time - prev_draw_time
+        if draw_dt > DELTA_TDRAW:  # 50 fps
+            canvas.delete("all")
+            draw_scene()
+            canvas.update()
+            prev_draw_time += DELTA_TDRAW
 
-while True:
-    draw_dt = time.perf_counter() - init_time - prev_draw_time
-    if draw_dt > DELTA_TDRAW:  # 50 fps
-        canvas.update()
+if __name__ == '__main__':
+    main()
+    mainloop()
